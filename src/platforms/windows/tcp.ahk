@@ -82,14 +82,11 @@ $^v:: {
     ; Check if clipboard has image data by running TCP core
     path := GetImagePath()
     if path != "" {
-        ; Type the path instead of pasting
-        prevDelay := A_KeyDelay
-        SetKeyDelay 0
-        SendInput path
-        SetKeyDelay prevDelay
+        ; Type the path as raw text (escape AHK special chars)
+        SendInput "{Raw}" path
     } else {
-        ; No image — pass through normal Ctrl+V
-        SendInput "^v"
+        ; No image — pass through using {Blind} to avoid ghost modifiers
+        SendInput "{Blind}^v"
     }
 }
 #HotIf
@@ -98,10 +95,8 @@ $^v:: {
 !v:: {
     path := GetImagePath()
     if path != "" {
-        prevDelay := A_KeyDelay
-        SetKeyDelay 0
-        SendInput path
-        SetKeyDelay prevDelay
+        ; Type the path as raw text (escape AHK special chars)
+        SendInput "{Raw}" path
     }
     ; If no image, Alt+V just does nothing
 }
