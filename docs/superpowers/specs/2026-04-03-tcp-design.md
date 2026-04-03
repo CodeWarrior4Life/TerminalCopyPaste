@@ -14,7 +14,12 @@ No existing tool solves this completely. The space is fragmented across ~12 tool
 
 ## 2. Solution
 
-TCP intercepts a global hotkey (Alt+B) and pastes the **file path** of the current clipboard image into the active terminal window. One keypress. Works in any terminal, on any OS.
+TCP makes Ctrl+V "just work" for images in terminals. When the active window is a recognized terminal and the clipboard contains an image, Ctrl+V pastes the **file path** instead of the image data. Outside terminals, or when the clipboard has text, Ctrl+V behaves normally. Alt+V is available as a universal manual override in any window.
+
+**Hotkey scheme:**
+- **Ctrl+V in terminal + image in clipboard** -> paste path (automatic, invisible)
+- **Ctrl+V anywhere else** -> normal paste (untouched)
+- **Alt+V anywhere** -> force paste path (manual override)
 
 ## 3. Architecture
 
@@ -54,13 +59,35 @@ No daemon. No long-running process. Invoked fresh each time by the shim.
 ### 3.2 Platform Shim
 
 The shim's responsibilities:
-1. Register global hotkey (Alt+B)
-2. On keypress: run `python tcp_core.py`, capture stdout
-3. If exit 0: type the captured path into the active window via keystroke simulation
-4. If exit 1: do nothing (optionally beep/tooltip)
-5. Manage system tray (Windows) or menu bar (macOS)
+1. Intercept Ctrl+V globally; check if active window is a recognized terminal
+2. Register Alt+V as universal manual override (works in any window)
+3. On trigger: run `python tcp_core.py`, capture stdout
+4. If exit 0: type the captured path into the active window via keystroke simulation
+5. If exit 1: pass through normal Ctrl+V (or do nothing for Alt+V)
+6. Manage system tray (Windows) or menu bar (macOS)
 
-On Windows, AHK's `SendInput` is the most reliable keystroke injection method across terminal emulators (Windows Terminal, Warp, PowerShell, CMD, Git Bash).
+**Ctrl+V interception logic:**
+```
+Ctrl+V pressed
+  -> Is active window exe in terminal list?
+    -> NO: pass through normal Ctrl+V
+    -> YES: Does clipboard contain an image? (quick check via shim or Python core)
+      -> NO: pass through normal Ctrl+V (paste text as usual)
+      -> YES: invoke tcp_core.py, type the path
+```
+
+**Built-in terminal list (Windows):**
+- `WindowsTerminal.exe`, `powershell.exe`, `pwsh.exe`, `cmd.exe`
+- `warp.exe`, `Code.exe` (VS Code), `alacritty.exe`, `mintty.exe` (Git Bash)
+
+**Configurable via config.toml:**
+```toml
+# Additional executables to treat as terminals
+# Built-in list is always active; these are additive
+extra_terminals = ["hyper.exe", "tabby.exe", "wezterm-gui.exe"]
+```
+
+On Windows, AHK's `SendInput` is the most reliable keystroke injection method across terminal emulators. AHK can check the active window's process name via `WinGetProcessName` before deciding whether to intercept or pass through.
 
 ### 3.3 Why This Split
 
@@ -132,6 +159,9 @@ format = "png"  # png | jpg
 # Path output style
 # "native" = OS default (backslash on Windows, forward on Unix)
 path_style = "native"
+
+# Additional executables to treat as terminals (additive to built-in list)
+extra_terminals = []
 ```
 
 Config is optional. TCP works with sensible defaults when no config file exists.
@@ -141,7 +171,7 @@ Config is optional. TCP works with sensible defaults when no config file exists.
 AHK provides built-in system tray support:
 
 - **Icon:** TCP branding icon in the system tray
-- **Tooltip:** "TCP active -- Alt+B to paste image path"
+- **Tooltip:** "TCP active -- Alt+V to paste image path"
 - **Right-click menu:**
   - Pause / Resume (toggles hotkey listening)
   - Exit
@@ -185,7 +215,7 @@ Incremented on every successful path paste (exit code 0). Persists across restar
 - Shows a non-blocking system notification (Windows toast / macOS notification center)
 - Includes "Don't show again" option (sets `dismissed_forever: true` in usage.json)
 - Never prompts more than once per milestone
-- Prompt fires on the next Alt+B press after crossing the milestone, not during active use
+- Prompt fires on the next Alt+V press after crossing the milestone, not during active use
 - Tool always works regardless of prompt state -- no feature lockouts, no degraded mode
 
 ### 7.4 Messaging Philosophy
@@ -288,4 +318,4 @@ TerminalCopyPaste/
 - Installer / setup wizard
 - Auto-update mechanism
 - Clipboard history (paste 2nd-most-recent screenshot)
-- Configurable hotkey (Alt+B is hardcoded in v1)
+- Configurable hotkey (Alt+V is hardcoded in v1)
