@@ -85,10 +85,13 @@ check_python_version() {
 
 get_project_dir() {
     # Check if we're in the repo
-    local script_dir
-    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # Note: BASH_SOURCE[0] is empty/unset when run via curl | bash (remote mode)
+    local script_dir=""
+    if [ -n "${BASH_SOURCE[0]:-}" ] && [ "${BASH_SOURCE[0]}" != "bash" ]; then
+        script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    fi
 
-    if [ -f "$script_dir/requirements.txt" ]; then
+    if [ -n "$script_dir" ] && [ -f "$script_dir/requirements.txt" ]; then
         echo "$script_dir"
         return
     fi
@@ -243,7 +246,9 @@ install_pip_deps() {
     local req_file="$1"
     status_install "Installing Python dependencies..."
     python3 -m pip install --quiet --upgrade pip 2>/dev/null || true
-    python3 -m pip install --quiet -r "$req_file"
+    # Try normal install first, fall back to --break-system-packages for PEP 668 distros
+    python3 -m pip install --quiet -r "$req_file" 2>/dev/null || \
+        python3 -m pip install --quiet --break-system-packages -r "$req_file"
     status_ok "Python dependencies installed"
 }
 

@@ -52,14 +52,17 @@ function Test-PythonInstalled {
 }
 
 function Test-AHKInstalled {
-    # Check registry
+    # Check for AHK v2 specifically (v1 is not compatible)
     $regPath = "HKLM:\SOFTWARE\AutoHotkey"
-    if (Test-Path $regPath) { return $true }
+    if (Test-Path "$regPath\v2") { return $true }
+    # Check version string in base key
+    try {
+        $ver = (Get-ItemProperty $regPath -ErrorAction SilentlyContinue).Version
+        if ($ver -and $ver -like "2.*") { return $true }
+    } catch {}
     # Check PATH
     try {
         $result = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
-        if ($result) { return $true }
-        $result = Get-Command "AutoHotkey32.exe" -ErrorAction SilentlyContinue
         if ($result) { return $true }
     } catch {}
     return $false
@@ -157,11 +160,9 @@ function Set-StartupShortcut {
 
 function Get-ProjectDir {
     # Check if we're running from within the repo
-    $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
-    $reqFile = Join-Path $scriptDir "requirements.txt"
-
-    if (Test-Path $reqFile) {
-        return $scriptDir
+    # Note: $PSScriptRoot is empty when run via irm | iex (remote mode)
+    if ($PSScriptRoot -and (Test-Path (Join-Path $PSScriptRoot "requirements.txt"))) {
+        return $PSScriptRoot
     }
 
     # Remote mode: clone the repo
