@@ -60,19 +60,18 @@ IsTerminal() {
 ; --- Helper: Run TCP core and get path ---
 GetImagePath() {
     try {
-        result := RunWait(TCP_PYTHON ' -m src.tcp_core', A_ScriptDir "\..\..",, &stdout)
-        if result = 0 {
-            ; Read stdout via temp file approach
-            tempFile := A_Temp "\tcp_output.txt"
-            RunWait(A_ComSpec ' /c ' TCP_PYTHON ' -m src.tcp_core > "' tempFile '"', A_ScriptDir "\..\..","Hide")
-            if FileExist(tempFile) {
-                path := FileRead(tempFile)
-                FileDelete(tempFile)
-                path := Trim(path, "`r`n `t")
-                if path != ""
-                    return path
-            }
+        tempFile := A_Temp "\tcp_output_" A_TickCount ".txt"
+        exitCode := RunWait(A_ComSpec ' /c ' TCP_PYTHON ' -m src.tcp_core > "' tempFile '"', A_ScriptDir "\..\..","Hide")
+        if exitCode = 0 && FileExist(tempFile) {
+            path := FileRead(tempFile)
+            FileDelete(tempFile)
+            path := Trim(path, "`r`n `t")
+            if path != ""
+                return path
         }
+        ; Clean up temp file on non-zero exit
+        if FileExist(tempFile)
+            FileDelete(tempFile)
     }
     return ""
 }

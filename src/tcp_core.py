@@ -52,11 +52,17 @@ def run(
 
 
 def _show_coffee_prompt(tracker: UsageTracker) -> None:
-    """Show milestone coffee prompt -- non-blocking."""
+    """Show milestone coffee prompt -- fire-and-forget, never blocks path output."""
     try:
+        import subprocess
         from src.usage import BMAC_URL
 
-        webbrowser.open(BMAC_URL)
+        # Fire-and-forget: open browser without blocking the CLI
+        subprocess.Popen(
+            [sys.executable, "-c", f"import webbrowser; webbrowser.open('{BMAC_URL}')"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         tracker.mark_prompted()
     except Exception:
         pass  # Never let a prompt failure break the tool
