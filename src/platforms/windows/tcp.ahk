@@ -4,7 +4,7 @@ Persistent
 
 ; --- Configuration ---
 TCP_PYTHON := "python"
-TCP_SCRIPT := A_ScriptDir "\..\..\tcp_core.py"
+TCP_SCRIPT := A_ScriptDir "\..\..\..\tcp_core.py"
 
 ; Built-in terminal executables
 TERMINALS := Map(
@@ -61,7 +61,7 @@ IsTerminal() {
 GetImagePath() {
     try {
         tempFile := A_Temp "\tcp_output_" A_TickCount ".txt"
-        exitCode := RunWait(A_ComSpec ' /c ' TCP_PYTHON ' -m src.tcp_core > "' tempFile '"', A_ScriptDir "\..\..","Hide")
+        exitCode := RunWait(A_ComSpec ' /c ' TCP_PYTHON ' -m src.tcp_core > "' tempFile '"', A_ScriptDir "\..\..\..","Hide")
         if exitCode = 0 && FileExist(tempFile) {
             path := FileRead(tempFile)
             FileDelete(tempFile)
