@@ -49,7 +49,7 @@ def _win32_get_image() -> Image.Image | None:
         data = win32clipboard.GetClipboardData(win32clipboard.CF_DIB)
         # CF_DIB is a BMP without the file header; Pillow's BmpImagePlugin handles it
         # We need to add the BMP file header
-        bmp_header = _make_bmp_header(len(data))
+        bmp_header = _make_bmp_header(data)
         return Image.open(io.BytesIO(bmp_header + data))
     except Exception:
         return None
@@ -60,11 +60,13 @@ def _win32_get_image() -> Image.Image | None:
             pass
 
 
-def _make_bmp_header(dib_size: int) -> bytes:
+def _make_bmp_header(dib_data: bytes) -> bytes:
     import struct
 
-    file_size = 14 + dib_size
-    return struct.pack("<2sIHHI", b"BM", file_size, 0, 0, 14 + 40)
+    dib_header_size = struct.unpack_from("<I", dib_data, 0)[0]
+    file_size = 14 + len(dib_data)
+    pixel_offset = 14 + dib_header_size
+    return struct.pack("<2sIHHI", b"BM", file_size, 0, 0, pixel_offset)
 
 
 def _macos_has_image() -> bool:
@@ -113,7 +115,7 @@ def _linux_has_image() -> bool:
             text=True,
             timeout=5,
         )
-        return "image/png" in result.stdout
+        return result.returncode == 0 and "image/png" in result.stdout
     except Exception:
         return False
 
