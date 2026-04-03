@@ -1,0 +1,22 @@
+# TCP Configuration
+# Copy to %APPDATA%\tcp\config.toml (Windows) or ~/.config/tcp/config.toml (macOS/Linux)
+
+# Where to save clipboard images that don't have a backing file
+# Default: auto-detected from OS screenshot settings
+save_dir = ""
+
+# Filename pattern for saved images (strftime format)
+filename_pattern = "tcp_%Y%m%d_%H%M%S.png"
+
+# How recent a file must be to count as the backing screenshot (seconds)
+recency_window = 5
+
+# Image format: "png" or "jpg"
+format = "png"
+
+# Path output style: "native" (OS default), "forward", or "backslash"
+path_style = "native"
+
+# Additional executables to treat as terminals (additive to built-in list)
+# Example: extra_terminals = ["hyper.exe", "tabby.exe", "wezterm-gui.exe"]
+extra_terminals = []
