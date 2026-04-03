@@ -16,15 +16,43 @@ TCP makes Ctrl+V smart:
 
 It detects your screenshot folder automatically, finds the matching file (or saves the clipboard image if needed), and types the path. One keypress.
 
-## Install (Windows)
+## Install
 
-1. Install [AutoHotkey v2](https://www.autohotkey.com/)
-2. Install [Python 3.12+](https://www.python.org/)
-3. Download the latest release (or clone this repo)
-4. Install dependencies: `pip install -r requirements.txt`
-5. Run: `src/platforms/windows/tcp.ahk`
+### Windows (GUI)
 
-**For compiled version:** Download `tcp_core.exe` + `tcp.ahk` from Releases. No Python needed.
+Download [TCPSetup.exe](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases/latest) and run it. Installs everything automatically.
+
+### Windows (CLI)
+
+```powershell
+irm https://raw.githubusercontent.com/CodeWarrior4Life/TerminalCopyPaste/main/install.ps1 | iex
+```
+
+Or clone and run locally:
+
+```powershell
+git clone https://github.com/CodeWarrior4Life/TerminalCopyPaste.git
+cd TerminalCopyPaste
+.\install.bat
+```
+
+### macOS
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CodeWarrior4Life/TerminalCopyPaste/main/install.sh | bash
+```
+
+> Note: macOS hotkey shim is not yet available. The Python core installs and is usable as `python3 -m src.tcp_core`.
+
+### Linux
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/CodeWarrior4Life/TerminalCopyPaste/main/install.sh | bash
+```
+
+Supports Debian/Ubuntu (apt), Fedora/RHEL (dnf), and Arch (pacman). Automatically installs Python, xclip, and pip dependencies.
+
+> Note: Linux hotkey shim is not yet available. The Python core installs and is usable as `python3 -m src.tcp_core`.
 
 ## Supported Terminals
 
