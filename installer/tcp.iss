@@ -86,9 +86,32 @@ begin
 end;
 
 function IsAHKInstalled: Boolean;
+var
+  Ver: String;
 begin
-  Result := RegKeyExists(HKLM, 'SOFTWARE\AutoHotkey') or
-            RegKeyExists(HKCU, 'SOFTWARE\AutoHotkey');
+  // Check HKLM (standard install)
+  if RegKeyExists(HKLM, 'SOFTWARE\AutoHotkey\v2') then begin Result := True; exit; end;
+  if RegQueryStringValue(HKLM, 'SOFTWARE\AutoHotkey', 'Version', Ver) then
+    if (Length(Ver) > 0) and (Ver[1] = '2') then begin Result := True; exit; end;
+  // Check HKCU (Scoop / per-user install)
+  if RegKeyExists(HKCU, 'SOFTWARE\AutoHotkey\v2') then begin Result := True; exit; end;
+  if RegQueryStringValue(HKCU, 'SOFTWARE\AutoHotkey', 'Version', Ver) then
+    if (Length(Ver) > 0) and (Ver[1] = '2') then begin Result := True; exit; end;
+  Result := False;
+end;
+
+procedure KillExistingTCP;
+var
+  ResultCode: Integer;
+begin
+  // Kill any running AutoHotkey instances running tcp.ahk
+  Exec('cmd.exe', '/c taskkill /F /FI "IMAGENAME eq AutoHotkey64.exe" /FI "WINDOWTITLE eq tcp*" 2>nul', '',
+       SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Exec('cmd.exe', '/c taskkill /F /FI "IMAGENAME eq AutoHotkey.exe" /FI "WINDOWTITLE eq tcp*" 2>nul', '',
+       SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  // Also try WMIC for command-line match (catches background instances)
+  Exec('cmd.exe', '/c wmic process where "name like ''AutoHotkey%'' and commandline like ''%tcp.ahk%''" call terminate 2>nul', '',
+       SW_HIDE, ewWaitUntilTerminated, ResultCode);
 end;
 
 procedure InitializeWizard;
@@ -102,6 +125,9 @@ var
   DownloadPage: TDownloadWizardPage;
 begin
   Result := '';
+
+  // Kill any running TCP sessions before installing
+  KillExistingTCP;
 
   if PythonNeeded or AHKNeeded then
   begin

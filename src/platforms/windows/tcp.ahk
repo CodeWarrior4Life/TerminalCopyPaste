@@ -22,7 +22,7 @@ TERMINALS := Map(
 ; For now, built-in list only. Config integration in future version.
 
 ; --- System Tray ---
-TraySetIcon("shell32.dll", 71)  ; Clipboard icon from shell32
+TraySetIcon(A_ScriptDir "\..\..\..\assets\tcp-tray-icon.ico")
 A_IconTip := "TCP active — Ctrl+V smart paste, Alt+V force paste"
 
 tray := A_TrayMenu

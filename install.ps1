@@ -53,19 +53,48 @@ function Test-PythonInstalled {
 
 function Test-AHKInstalled {
     # Check for AHK v2 specifically (v1 is not compatible)
-    $regPath = "HKLM:\SOFTWARE\AutoHotkey"
-    if (Test-Path "$regPath\v2") { return $true }
-    # Check version string in base key
-    try {
-        $ver = (Get-ItemProperty $regPath -ErrorAction SilentlyContinue).Version
-        if ($ver -and $ver -like "2.*") { return $true }
-    } catch {}
-    # Check PATH
-    try {
-        $result = Get-Command "AutoHotkey64.exe" -ErrorAction SilentlyContinue
-        if ($result) { return $true }
-    } catch {}
+    # Check both HKLM (standard install) and HKCU (Scoop / per-user install)
+    foreach ($hive in @("HKLM:\SOFTWARE\AutoHotkey", "HKCU:\SOFTWARE\AutoHotkey")) {
+        if (Test-Path "$hive\v2") { return $true }
+        try {
+            $ver = (Get-ItemProperty $hive -ErrorAction SilentlyContinue).Version
+            if ($ver -and $ver -like "2.*") { return $true }
+        } catch {}
+    }
+    # Check PATH (both names -- standard install vs Scoop shim)
+    foreach ($exe in @("AutoHotkey64.exe", "AutoHotkey.exe", "autohotkey.exe")) {
+        try {
+            if (Get-Command $exe -ErrorAction SilentlyContinue) { return $true }
+        } catch {}
+    }
     return $false
+}
+
+function Stop-ExistingTCP {
+    # Kill any running TCP AutoHotkey sessions before install/launch
+    $killed = 0
+    Get-Process | Where-Object {
+        $_.ProcessName -match "^AutoHotkey" -and
+        $_.MainWindowTitle -match "tcp" -or
+        ($_.CommandLine -and $_.CommandLine -match "tcp\.ahk")
+    } | ForEach-Object {
+        try {
+            $_ | Stop-Process -Force
+            $killed++
+        } catch {}
+    }
+    # Fallback: kill any AHK process whose command line contains tcp.ahk
+    try {
+        Get-CimInstance Win32_Process -Filter "Name LIKE 'AutoHotkey%'" |
+            Where-Object { $_.CommandLine -match "tcp\.ahk" } |
+            ForEach-Object {
+                Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+                $killed++
+            }
+    } catch {}
+    if ($killed -gt 0) {
+        Write-Status "OK" "Stopped $killed existing TCP session(s)"
+    }
 }
 
 function Install-Python {
@@ -203,6 +232,9 @@ Write-Host ""
 
 # Step 0: Determine project directory
 $projectDir = Get-ProjectDir
+
+# Step 0.5: Kill existing TCP sessions
+Stop-ExistingTCP
 
 # Step 1: Python
 if (Test-PythonInstalled) {
