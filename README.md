@@ -1,5 +1,9 @@
 # Terminal Copy Paste (TCP)
 
+[![Version](https://img.shields.io/github/v/release/CodeWarrior4Life/TerminalCopyPaste)](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases/latest)
+[![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)]()
+
 **The missing paste for terminals.** Screenshot, Ctrl+V, done. Your clipboard image becomes a file path — in any terminal, with zero learning curve.
 
 ## The Problem
