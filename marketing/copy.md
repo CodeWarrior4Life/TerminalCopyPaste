@@ -294,7 +294,7 @@ Alt+V is the override: it force-pastes the image path regardless of which window
 
 I made a deliberate choice to require no setup. TCP works the moment you install it.
 
-Screenshot folder detection happens via the Windows registry — specifically the known folder GUID for the Screenshots library. No config file needed for the common case.
+Screenshot folder detection is automatic on every platform — Windows registry keys, macOS defaults, and XDG paths on Linux. No config file needed for the common case.
 
 Terminal detection uses a built-in list of process names: `WindowsTerminal.exe`, `powershell.exe`, `pwsh.exe`, `cmd.exe`, `Code.exe`, `warp.exe`, `alacritty.exe`, `mintty.exe`. You can add more in `%APPDATA%\tcp\config.toml` if your terminal isn't covered.
 
@@ -350,3 +350,7 @@ irm https://raw.githubusercontent.com/CodeWarrior4Life/TerminalCopyPaste/main/in
 **Repo:** https://github.com/CodeWarrior4Life/TerminalCopyPaste
 
 If you use Claude Code, Codex CLI, Aider, or any terminal-heavy workflow, give it a try. It's the kind of tool that becomes invisible after a day — which is exactly what I was going for.
+
+---
+
+If you found this useful, consider [buying me a coffee](https://buymeacoffee.com/tfvmclmlwp) to keep the ideas flowing. ☕
