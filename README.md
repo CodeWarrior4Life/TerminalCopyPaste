@@ -1,6 +1,7 @@
 # Terminal Copy Paste (TCP)
 
 [![Version](https://img.shields.io/github/v/release/CodeWarrior4Life/TerminalCopyPaste)](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/CodeWarrior4Life/TerminalCopyPaste/total)](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases)
 [![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)]()
 
