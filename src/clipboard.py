@@ -197,5 +197,55 @@ def _win32_get_hdrop_paths() -> list[str] | None:
 
 
 def _win32_get_virtual_files() -> list[str] | None:
-    # Stub: real implementation in Task 3
-    return None
+    """Extract virtual files from clipboard (FileGroupDescriptorW + FileContents)
+    to the TCP temp dir. Handles the single-file case common in messaging apps."""
+    import win32clipboard
+    import struct
+    from src.file_resolver import save_clipboard_blob
+
+    try:
+        cf_descriptor = win32clipboard.RegisterClipboardFormat("FileGroupDescriptorW")
+        cf_contents = win32clipboard.RegisterClipboardFormat("FileContents")
+        win32clipboard.OpenClipboard()
+        if not win32clipboard.IsClipboardFormatAvailable(cf_descriptor):
+            return None
+        descriptor_blob = win32clipboard.GetClipboardData(cf_descriptor)
+        if not descriptor_blob:
+            return None
+
+        # Parse FILEGROUPDESCRIPTORW: UINT cItems, then FILEDESCRIPTORW[cItems]
+        (count,) = struct.unpack_from("<I", descriptor_blob, 0)
+        if count < 1:
+            return None
+        # Each FILEDESCRIPTORW is 592 bytes; cFileName is at offset 72, 260 wchars
+        filenames = []
+        record_size = 592
+        name_offset = 72
+        name_byte_len = 260 * 2
+        for i in range(count):
+            base = 4 + i * record_size
+            raw_name = descriptor_blob[
+                base + name_offset : base + name_offset + name_byte_len
+            ]
+            name = raw_name.decode("utf-16-le", errors="replace").split("\x00", 1)[0]
+            if name:
+                filenames.append(name)
+
+        if not filenames:
+            return None
+
+        # pywin32's GetClipboardData for FileContents returns the first stream's bytes.
+        # Multi-file virtual paste requires IDataObject; defer to v1.2.
+        contents = win32clipboard.GetClipboardData(cf_contents)
+        if contents is None:
+            return None
+
+        saved = save_clipboard_blob(filenames[0], contents)
+        return [saved]
+    except Exception:
+        return None
+    finally:
+        try:
+            win32clipboard.CloseClipboard()
+        except Exception:
+            pass
