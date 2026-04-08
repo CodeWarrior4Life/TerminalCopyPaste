@@ -33,7 +33,7 @@ UninstallDisplayIcon={app}\src\platforms\windows\tcp.ahk
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "startup"; Description: "Start TCP on login"; Flags: unchecked
+Name: "startup"; Description: "Start TCP on login"
 
 [Files]
 ; Copy entire project
@@ -42,11 +42,14 @@ Source: "..\config\*"; DestDir: "{app}\config"; Flags: ignoreversion recursesubd
 Source: "..\requirements.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: IsAHKInstalled
+Name: "{group}\{#MyAppName}"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: not IsAHKInstalled
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{userstartup}\TCP"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; Tasks: startup
+Name: "{userstartup}\TCP"; Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Tasks: startup; Check: IsAHKInstalled
+Name: "{userstartup}\TCP"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Tasks: startup; Check: not IsAHKInstalled
 
 [Run]
 ; Install Python if needed (check done in Code section)
@@ -98,6 +101,36 @@ begin
   if RegQueryStringValue(HKCU, 'SOFTWARE\AutoHotkey', 'Version', Ver) then
     if (Length(Ver) > 0) and (Ver[1] = '2') then begin Result := True; exit; end;
   Result := False;
+end;
+
+function GetAHKExePath: String;
+var
+  InstallDir: String;
+begin
+  // Check HKLM first (standard install)
+  if RegQueryStringValue(HKLM, 'SOFTWARE\AutoHotkey', 'InstallDir', InstallDir) then begin
+    if FileExists(InstallDir + '\v2\AutoHotkey64.exe') then begin
+      Result := InstallDir + '\v2\AutoHotkey64.exe';
+      exit;
+    end;
+    if FileExists(InstallDir + '\v2\AutoHotkey32.exe') then begin
+      Result := InstallDir + '\v2\AutoHotkey32.exe';
+      exit;
+    end;
+  end;
+  // Check HKCU (Scoop / per-user install)
+  if RegQueryStringValue(HKCU, 'SOFTWARE\AutoHotkey', 'InstallDir', InstallDir) then begin
+    if FileExists(InstallDir + '\v2\AutoHotkey64.exe') then begin
+      Result := InstallDir + '\v2\AutoHotkey64.exe';
+      exit;
+    end;
+    if FileExists(InstallDir + '\v2\AutoHotkey32.exe') then begin
+      Result := InstallDir + '\v2\AutoHotkey32.exe';
+      exit;
+    end;
+  end;
+  // Fallback: rely on file association
+  Result := '';
 end;
 
 procedure KillExistingTCP;

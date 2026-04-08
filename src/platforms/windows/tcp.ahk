@@ -79,19 +79,13 @@ GetImagePath() {
 ; --- Ctrl+V: Smart paste in terminals ---
 #HotIf IsTerminal()
 $^v:: {
-    ; Intercept Ctrl+V, check for image, swap clipboard, then paste
+    ; Get image/file path from TCP core
     path := GetImagePath()
     if path != "" {
-        ; Swap clipboard to the file path, then paste it natively
-        prevClip := ClipboardAll()
-        A_Clipboard := path
-        ClipWait 1
-        Send "^v"
-        Sleep 100
-        ; Restore original clipboard
-        A_Clipboard := prevClip
+        ; Type the path as raw text — no clipboard swap, no race condition
+        SendInput "{Raw}" path
     } else {
-        ; No image — just paste. Use Send (not SendInput) for clean passthrough
+        ; No image/file — just paste normally
         Send "^v"
     }
 }
