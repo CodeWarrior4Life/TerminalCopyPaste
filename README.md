@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/github/v/release/CodeWarrior4Life/TerminalCopyPaste)](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/CodeWarrior4Life/TerminalCopyPaste/total)](https://github.com/CodeWarrior4Life/TerminalCopyPaste/releases)
 [![License](https://img.shields.io/badge/license-BSL--1.1-blue)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-45%20passed-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-69%20passed-brightgreen)]()
 
 **The missing paste for terminals.** Screenshot, Ctrl+V, done. Your clipboard image becomes a file path — in any terminal, with zero learning curve.
 
@@ -16,6 +16,7 @@ Terminals can't paste images. AI coding tools (Claude Code, Codex CLI, Aider) ne
 TCP makes Ctrl+V smart:
 
 - **Ctrl+V in a terminal + image in clipboard** → pastes the file path
+- **Ctrl+V in a terminal + file(s) in clipboard** → pastes the file path(s)
 - **Ctrl+V anywhere else** → normal paste (untouched)
 - **Alt+V anywhere** → force paste image path (manual override)
 
@@ -89,13 +90,25 @@ path_style = "native"                  # native, forward, or backslash
 extra_terminals = []
 ```
 
+## Features
+
+- Paste any copied file as a path: Explorer copies paste their existing path(s); attachments from Telegram/WhatsApp/Outlook are extracted to `%TEMP%\tcp\` and their path pasted. Multiple files are newline-separated.
+- Clipboard images are matched to a recently-saved screenshot or saved automatically.
+- Non-terminal windows receive normal Ctrl+V — TCP never interferes.
+
 ## How It Works
 
 1. You press Ctrl+V in a terminal (or Alt+V anywhere)
-2. TCP checks: is there an image in the clipboard?
-3. If yes: finds the matching file on disk (or saves it)
-4. Types the file path into your terminal
-5. If no image: passes through normal Ctrl+V
+2. TCP checks: are there files in the clipboard? If yes: pastes their path(s).
+3. Otherwise: is there an image? If yes: finds or saves the file and pastes its path.
+4. If neither: passes through normal Ctrl+V
+
+## What's New in v1.1
+
+- **Any-file paste** — files copied from Explorer or messaging apps (Telegram, WhatsApp, Outlook) now paste as paths instead of doing nothing.
+- **Start Menu shortcut fixed** — installer now creates a properly-iconned Start Menu entry.
+- **Starts on login by default** — no manual setup needed after install.
+- **Clipboard race fix** — resolved a paste conflict with Wispr and other apps that write to the clipboard (Ctrl+V no longer double-fires).
 
 ## License
 
