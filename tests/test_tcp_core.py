@@ -56,3 +56,84 @@ class TestRun:
         ):
             exit_code, output = run(config=config, data_dir=str(tmp_path))
             assert exit_code == 2
+            assert output == ""
+
+
+class TestFilesBranch:
+    def test_cf_hdrop_single_file_returns_formatted_path(self, tmp_path):
+        config = TCPConfig(save_dir=str(tmp_path))
+        target = tmp_path / "doc.pdf"
+        target.write_bytes(b"fake")
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
+            with patch("src.tcp_core.get_clipboard_files", return_value=[str(target)]):
+                exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 0
+        assert str(target) in output
+
+    def test_cf_hdrop_multiple_files_newline_joined(self, tmp_path):
+        config = TCPConfig(save_dir=str(tmp_path))
+        a = tmp_path / "a.pdf"
+        b = tmp_path / "b.txt"
+        a.write_bytes(b"a")
+        b.write_bytes(b"b")
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
+            with patch("src.tcp_core.get_clipboard_files", return_value=[str(a), str(b)]):
+                exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 0
+        assert str(a) in output
+        assert str(b) in output
+        assert "\n" in output
+
+    def test_files_branch_increments_usage(self, tmp_path):
+        config = TCPConfig(save_dir=str(tmp_path))
+        target = tmp_path / "doc.pdf"
+        target.write_bytes(b"x")
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
+            with patch("src.tcp_core.get_clipboard_files", return_value=[str(target)]):
+                run(config=config, data_dir=str(tmp_path))
+        assert (tmp_path / "usage.json").exists()
+
+    def test_files_take_priority_over_image(self, tmp_path):
+        """When both files and image present, files win."""
+        config = TCPConfig(save_dir=str(tmp_path))
+        target = tmp_path / "doc.pdf"
+        target.write_bytes(b"x")
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
+            with patch("src.tcp_core.get_clipboard_files", return_value=[str(target)]):
+                with patch("src.tcp_core.has_image_in_clipboard", return_value=True):
+                    with patch("src.tcp_core.get_clipboard_image") as mock_img:
+                        exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 0
+        assert str(target) in output
+        mock_img.assert_not_called()
+
+    def test_no_files_falls_through_to_image(self, tmp_path):
+        """Regression: when has_files_in_clipboard False, image flow still runs."""
+        config = TCPConfig(save_dir=str(tmp_path))
+        img_path = tmp_path / "screenshot.png"
+        Image.new("RGB", (10, 10)).save(str(img_path))
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=False):
+            with patch("src.tcp_core.has_image_in_clipboard", return_value=True):
+                exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 0
+        assert str(tmp_path) in output
+
+    def test_no_files_no_image_returns_1(self, tmp_path):
+        config = TCPConfig(save_dir=str(tmp_path))
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=False):
+            with patch("src.tcp_core.has_image_in_clipboard", return_value=False):
+                exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 1
+        assert output == ""
+
+    def test_files_branch_get_returns_none_falls_through(self, tmp_path):
+        """Defensive: has_files says True but get returns None -- fall to image."""
+        config = TCPConfig(save_dir=str(tmp_path))
+        img_path = tmp_path / "screenshot.png"
+        Image.new("RGB", (10, 10)).save(str(img_path))
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
+            with patch("src.tcp_core.get_clipboard_files", return_value=None):
+                with patch("src.tcp_core.has_image_in_clipboard", return_value=True):
+                    exit_code, output = run(config=config, data_dir=str(tmp_path))
+        assert exit_code == 0
+        assert str(tmp_path) in output

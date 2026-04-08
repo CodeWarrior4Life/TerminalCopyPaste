@@ -3,7 +3,12 @@
 import sys
 import webbrowser
 
-from src.clipboard import has_image_in_clipboard, get_clipboard_image
+from src.clipboard import (
+    has_image_in_clipboard,
+    get_clipboard_image,
+    has_files_in_clipboard,
+    get_clipboard_files,
+)
 from src.config import load_config, TCPConfig
 from src.file_resolver import find_recent_screenshot, save_clipboard_image
 from src.path_format import format_path
@@ -18,6 +23,19 @@ def run(
     try:
         if config is None:
             config = load_config()
+
+        # Files/virtual files (v1.1). Runs before image path so apps
+        # that publish both an image preview AND a file yield the file.
+        if has_files_in_clipboard():
+            file_paths = get_clipboard_files()
+            if file_paths:
+                formatted = "\n".join(format_path(p, config) for p in file_paths)
+                tracker = UsageTracker(data_dir=data_dir)
+                tracker.increment()
+                if tracker.should_prompt():
+                    _show_coffee_prompt(tracker)
+                return 0, formatted
+            # get_clipboard_files returned None -> fall through to image path
 
         if not has_image_in_clipboard():
             return 1, ""
