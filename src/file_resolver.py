@@ -1,6 +1,7 @@
 """Find or save clipboard images on disk."""
 
 import os
+import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
@@ -58,3 +59,24 @@ def save_clipboard_image(
         image.save(save_path, "PNG")
 
     return save_path
+
+
+def get_tcp_temp_dir() -> str:
+    """Return the TCP temp dir for extracted clipboard blobs, creating it if missing."""
+    d = Path(tempfile.gettempdir()) / "tcp"
+    d.mkdir(parents=True, exist_ok=True)
+    return str(d)
+
+
+def save_clipboard_blob(filename: str, data: bytes) -> str:
+    """Write data to the TCP temp dir under filename. On collision, append a
+    timestamp suffix before the extension. Returns the absolute path written."""
+    temp_dir = Path(get_tcp_temp_dir())
+    target = temp_dir / filename
+    if target.exists():
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        stem = target.stem
+        suffix = target.suffix
+        target = temp_dir / f"{stem}_{ts}{suffix}"
+    target.write_bytes(data)
+    return str(target)
