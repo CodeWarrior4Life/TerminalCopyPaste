@@ -135,3 +135,67 @@ def _linux_get_image() -> Image.Image | None:
     except Exception:
         pass
     return None
+
+
+def has_files_in_clipboard() -> bool:
+    if sys.platform == "win32":
+        return _win32_has_files()
+    return False
+
+
+def get_clipboard_files() -> list[str] | None:
+    if sys.platform != "win32":
+        return None
+    paths = _win32_get_hdrop_paths()
+    if paths:
+        return paths
+    return _win32_get_virtual_files()
+
+
+def _win32_has_files() -> bool:
+    import win32clipboard
+
+    try:
+        win32clipboard.OpenClipboard()
+        if win32clipboard.IsClipboardFormatAvailable(win32clipboard.CF_HDROP):
+            return True
+        try:
+            cf_descriptor = win32clipboard.RegisterClipboardFormat(
+                "FileGroupDescriptorW"
+            )
+            if win32clipboard.IsClipboardFormatAvailable(cf_descriptor):
+                return True
+        except Exception:
+            pass
+        return False
+    except Exception:
+        return False
+    finally:
+        try:
+            win32clipboard.CloseClipboard()
+        except Exception:
+            pass
+
+
+def _win32_get_hdrop_paths() -> list[str] | None:
+    import win32clipboard
+
+    try:
+        win32clipboard.OpenClipboard()
+        if not win32clipboard.IsClipboardFormatAvailable(win32clipboard.CF_HDROP):
+            return None
+        data = win32clipboard.GetClipboardData(win32clipboard.CF_HDROP)
+        paths = [str(p) for p in data]
+        return paths if paths else None
+    except Exception:
+        return None
+    finally:
+        try:
+            win32clipboard.CloseClipboard()
+        except Exception:
+            pass
+
+
+def _win32_get_virtual_files() -> list[str] | None:
+    # Stub: real implementation in Task 3
+    return None
