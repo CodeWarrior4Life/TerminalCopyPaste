@@ -8,6 +8,11 @@ from src.config import TCPConfig
 
 
 class TestRun:
+    @pytest.fixture(autouse=True)
+    def no_files_in_clipboard(self):
+        with patch("src.tcp_core.has_files_in_clipboard", return_value=False):
+            yield
+
     def test_returns_0_and_path_when_recent_file_found(self, tmp_path):
         # Create a recent screenshot
         img_path = tmp_path / "screenshot.png"
@@ -77,7 +82,9 @@ class TestFilesBranch:
         a.write_bytes(b"a")
         b.write_bytes(b"b")
         with patch("src.tcp_core.has_files_in_clipboard", return_value=True):
-            with patch("src.tcp_core.get_clipboard_files", return_value=[str(a), str(b)]):
+            with patch(
+                "src.tcp_core.get_clipboard_files", return_value=[str(a), str(b)]
+            ):
                 exit_code, output = run(config=config, data_dir=str(tmp_path))
         assert exit_code == 0
         assert str(a) in output

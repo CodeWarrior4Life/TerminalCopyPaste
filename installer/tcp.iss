@@ -3,7 +3,7 @@
 ; Requires Inno Setup 6+
 
 #define MyAppName "Terminal Copy Paste"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Crossroads Technologies, LLC"
 #define MyAppURL "https://github.com/CodeWarrior4Life/TerminalCopyPaste"
 #define MyAppExeName "tcp.ahk"
