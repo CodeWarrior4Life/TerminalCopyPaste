@@ -2,6 +2,11 @@
 #SingleInstance Force
 Persistent
 
+; --- Global mutex: prevent multiple TCP instances across different script paths ---
+DllCall("CreateMutex", "Ptr", 0, "Int", 0, "Str", "TCPClipboardPaster")
+if A_LastError = 183  ; ERROR_ALREADY_EXISTS
+    ExitApp
+
 ; --- Configuration ---
 TCP_PYTHON := "python"
 TCP_SCRIPT := A_ScriptDir "\..\..\..\tcp_core.py"
