@@ -108,7 +108,8 @@ extra_terminals = []
 - **Any-file paste** — files copied from Explorer or messaging apps (Telegram, WhatsApp, Outlook) now paste as paths instead of doing nothing.
 - **Start Menu shortcut fixed** — installer now creates a properly-iconned Start Menu entry.
 - **Starts on login by default** — no manual setup needed after install.
-- **Clipboard race fix** — resolved a paste conflict with Wispr and other apps that write to the clipboard (Ctrl+V no longer double-fires).
+- **Streamlined installer** — no wizard pages, installs silently with progress bar, launches TCP automatically.
+- **Clipboard race fix** — resolved a conflict with Wispr and other clipboard-writing apps. Ctrl+V now types the path directly instead of swapping the clipboard, eliminating wrong-paste issues.
 
 ## License
 
