@@ -17,23 +17,23 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}/issues
 DefaultDirName={localappdata}\tcp
 DefaultGroupName={#MyAppName}
-LicenseFile=..\LICENSE
 OutputDir=..\dist
 OutputBaseFilename=TCPSetup
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+DisableDirPage=yes
+DisableProgramGroupPage=yes
+DisableReadyPage=yes
+DisableFinishedPage=yes
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-SetupIconFile=compiler:SetupClassicIcon.ico
-UninstallDisplayIcon={app}\src\platforms\windows\tcp.ahk
+SetupIconFile=..\assets\tcp-icon.ico
+UninstallDisplayIcon={app}\assets\tcp-icon.ico
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-
-[Tasks]
-Name: "startup"; Description: "Start TCP on login"
 
 [Files]
 ; Copy entire project
@@ -48,8 +48,8 @@ Source: "..\assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubd
 Name: "{group}\{#MyAppName}"; Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: IsAHKInstalled
 Name: "{group}\{#MyAppName}"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: not IsAHKInstalled
 Name: "{group}\Uninstall {#MyAppName}"; Filename: "{uninstallexe}"
-Name: "{userstartup}\TCP"; Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Tasks: startup; Check: IsAHKInstalled
-Name: "{userstartup}\TCP"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Tasks: startup; Check: not IsAHKInstalled
+Name: "{userstartup}\TCP"; Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: IsAHKInstalled
+Name: "{userstartup}\TCP"; Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; IconFilename: "{app}\assets\tcp-tray-icon.ico"; Check: not IsAHKInstalled
 
 [Run]
 ; Install Python if needed (check done in Code section)
@@ -61,7 +61,8 @@ Filename: "python"; Parameters: "-m pip install --quiet -r ""{app}\requirements.
 ; Copy default config if not present
 Filename: "{cmd}"; Parameters: "/c if not exist ""{userappdata}\tcp\config.toml"" ( mkdir ""{userappdata}\tcp"" 2>nul & copy ""{app}\config\config.example.toml"" ""{userappdata}\tcp\config.toml"" )"; Flags: runhidden waituntilterminated
 ; Launch TCP
-Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; Description: "Launch TCP now"; Flags: nowait postinstall skipifsilent
+Filename: "{code:GetAHKExePath}"; Parameters: """{app}\src\platforms\windows\{#MyAppExeName}"""; Flags: nowait postinstall; Check: IsAHKInstalled
+Filename: "{app}\src\platforms\windows\{#MyAppExeName}"; Flags: nowait postinstall shellexec; Check: not IsAHKInstalled
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
@@ -103,7 +104,7 @@ begin
   Result := False;
 end;
 
-function GetAHKExePath: String;
+function GetAHKExePath(Param: String): String;
 var
   InstallDir: String;
 begin
