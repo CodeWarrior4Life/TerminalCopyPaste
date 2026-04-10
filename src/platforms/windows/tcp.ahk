@@ -62,6 +62,15 @@ IsTerminal() {
     return false
 }
 
+; --- Helper: Paste path via clipboard (bracketed paste in terminals) ---
+PastePath(path) {
+    saved := ClipboardAll()
+    A_Clipboard := path
+    SendInput "^v"
+    ; Restore clipboard after terminal has time to read it
+    SetTimer(() => (A_Clipboard := saved), -150)
+}
+
 ; --- Helper: Run TCP core and get path ---
 GetImagePath() {
     try {
@@ -84,13 +93,10 @@ GetImagePath() {
 ; --- Ctrl+V: Smart paste in terminals ---
 #HotIf IsTerminal()
 $^v:: {
-    ; Get image/file path from TCP core
     path := GetImagePath()
     if path != "" {
-        ; Type the path as raw text — no clipboard swap, no race condition
-        SendInput "{Raw}" path
+        PastePath(path)
     } else {
-        ; No image/file — just paste normally
         Send "^v"
     }
 }
@@ -100,8 +106,6 @@ $^v:: {
 !v:: {
     path := GetImagePath()
     if path != "" {
-        ; Type the path as raw text (escape AHK special chars)
-        SendInput "{Raw}" path
+        PastePath(path)
     }
-    ; If no image, Alt+V just does nothing
 }
