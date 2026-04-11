@@ -20,7 +20,7 @@ TCP makes Ctrl+V smart:
 - **Ctrl+V anywhere else** → normal paste (untouched)
 - **Alt+V anywhere** → force paste image path (manual override)
 
-It detects your screenshot folder automatically, finds the matching file (or saves the clipboard image if needed), and types the path. One keypress.
+It detects your screenshot folder automatically, finds the matching file (or saves the clipboard image if needed), and pastes the path. One keypress.
 
 ## Install
 
@@ -106,10 +106,11 @@ extra_terminals = []
 ## What's New in v1.1
 
 - **Any-file paste** — files copied from Explorer or messaging apps (Telegram, WhatsApp, Outlook) now paste as paths instead of doing nothing.
+- **Instant clipboard paste** — paths are pasted via clipboard + Ctrl+V instead of typed character-by-character, so output appears instantly.
+- **Duplicate instance prevention** — system-wide mutex ensures only one TCP instance runs at a time.
 - **Start Menu shortcut fixed** — installer now creates a properly-iconned Start Menu entry.
 - **Starts on login by default** — no manual setup needed after install.
 - **Streamlined installer** — no wizard pages, installs silently with progress bar, launches TCP automatically.
-- **Clipboard race fix** — resolved a conflict with Wispr and other clipboard-writing apps. Ctrl+V now types the path directly instead of swapping the clipboard, eliminating wrong-paste issues.
 
 ## License
 

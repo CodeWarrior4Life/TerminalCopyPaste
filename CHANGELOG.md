@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.0] - 2026-04-10
+
+### Added
+- Any-file paste: files copied from Explorer or messaging apps paste as paths
+- System-wide mutex to prevent duplicate TCP instances
+
+### Fixed
+- Replaced character-by-character `SendInput "{Raw}"` with clipboard swap + Ctrl+V for instant path pasting
+- Streamlined installer: silent wizard, proper TCP icon, AHK exe launch
+
 ## [1.0.0] - 2026-04-03
 
 ### Added
