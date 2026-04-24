@@ -152,44 +152,21 @@ install_python_macos() {
     fi
     status_install "Installing Python via Homebrew..."
     brew install python@3.13
+    # python@3.13 is keg-only for unversioned names (`python3`, `pip`).
+    # Prepend its libexec/bin so the rest of the installer uses 3.13
+    # instead of the system's Python.
+    local py_libexec
+    py_libexec="$(brew --prefix python@3.13)/libexec/bin"
+    if [ -d "$py_libexec" ]; then
+        export PATH="$py_libexec:$PATH"
+    fi
     status_ok "Python installed"
 }
 
-setup_startup_macos() {
-    local project_dir="$1"
-    local plist_dir="$HOME/Library/LaunchAgents"
-    local plist_file="$plist_dir/com.crossroadtech.tcp.plist"
-
-    if [ -f "$plist_file" ]; then
-        status_skip "Launch Agent already exists"
-        return
-    fi
-
-    mkdir -p "$plist_dir"
-    cat > "$plist_file" << PLIST
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.crossroadtech.tcp</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>python3</string>
-        <string>-m</string>
-        <string>src.tcp_core</string>
-    </array>
-    <key>WorkingDirectory</key>
-    <string>$project_dir</string>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <false/>
-</dict>
-</plist>
-PLIST
-    status_ok "Launch Agent created"
-}
+# NOTE: No setup_startup_macos here. tcp_core is a stateless per-keypress
+# CLI (see design spec §3.1), not a daemon. A login agent would run it
+# once at login and exit immediately. Startup setup will be reintroduced
+# alongside the macOS hotkey shim (Hammerspoon, spec §3.2 / §9.2).
 
 # --- Linux-specific ---
 
@@ -215,30 +192,10 @@ install_xclip() {
     status_ok "xclip installed"
 }
 
-setup_startup_linux() {
-    local project_dir="$1"
-    local autostart_dir="$HOME/.config/autostart"
-    local desktop_file="$autostart_dir/tcp.desktop"
-
-    if [ -f "$desktop_file" ]; then
-        status_skip "Autostart entry already exists"
-        return
-    fi
-
-    mkdir -p "$autostart_dir"
-    cat > "$desktop_file" << DESKTOP
-[Desktop Entry]
-Type=Application
-Name=TCP - Terminal Copy Paste
-Comment=Clipboard image path paster for terminals
-Exec=python3 -m src.tcp_core
-Path=$project_dir
-Terminal=false
-Hidden=false
-X-GNOME-Autostart-enabled=true
-DESKTOP
-    status_ok "Autostart entry created"
-}
+# NOTE: No setup_startup_linux here. Same reason as macOS above --
+# tcp_core is a stateless per-keypress CLI, not a daemon. Startup setup
+# will be reintroduced alongside the Linux hotkey shim (sxhkd + xdotool,
+# spec §3.2 / §9.3).
 
 # --- Shared ---
 
@@ -305,18 +262,8 @@ install_pip_deps "$PROJECT_DIR/requirements.txt"
 # Step 4: Config
 copy_default_config "$PROJECT_DIR"
 
-# Step 5: Startup option
-echo ""
-read -rp "  Start TCP on login? [y/N] " startup_choice
-if [[ "$startup_choice" =~ ^[Yy] ]]; then
-    if [ "$OS" = "macos" ]; then
-        setup_startup_macos "$PROJECT_DIR"
-    elif [ "$OS" = "linux" ]; then
-        setup_startup_linux "$PROJECT_DIR"
-    fi
-else
-    status_skip "Startup not configured"
-fi
+# Step 5: Startup option -- deferred on macOS/Linux until hotkey shim lands
+status_skip "Login startup not configured -- waiting on macOS/Linux hotkey shim"
 
 # Summary
 echo ""

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.1.1] - 2026-04-24
+
+### Fixed
+- `requirements.txt` now guards `pywin32` with `sys_platform == "win32"` so `pip install` works on macOS and Linux (the Python core has always been cross-platform per spec §3).
+- `install.sh` correctly uses Homebrew's Python 3.13 after `brew install python@3.13` by prepending the keg's `libexec/bin` to `PATH` (unversioned `python3` is not symlinked by default on macOS).
+- Removed macOS LaunchAgent / Linux `.desktop` autostart generation from `install.sh`. The Python core is a stateless per-keypress CLI (spec §3.1); running it at login executed once and exited. Login startup will return alongside the macOS/Linux hotkey shims.
+
 ## [1.1.0] - 2026-04-10
 
 ### Added
